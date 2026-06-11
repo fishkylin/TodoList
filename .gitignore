@@ -1,0 +1,58 @@
+# ==================
+# Python 相关
+# ==================
+# 字节码缓存
+__pycache__/
+*.py[cod]
+*.so
+
+# 虚拟环境（常见目录）
+venv/
+env/
+.venv/
+.env/
+
+# 构建产物
+build/
+dist/
+*.egg-info/
+*.egg
+
+# 测试/覆盖率
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# 类型检查（mypy）
+.mypy_cache/
+.dmypy.json
+
+# Jupyter Notebook（如有）
+.ipynb_checkpoints/
+
+# ==================
+# VSCode 相关
+# ==================
+# 工作区设置（建议团队共享时可以去掉注释并提交）
+.vscode/
+!.vscode/settings.json   # 如果想保留共享设置，保留此例外
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ==================
+# 操作系统生成文件
+# ==================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==================
+# 敏感信息 / 本地配置
+# ==================
+logs/*
+.env.local
+.secrets
+*.key
+*.pem

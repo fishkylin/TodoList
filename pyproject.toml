@@ -1,0 +1,20 @@
+[project]
+name = "todolist"
+version = "0.1.0"
+description = "Terminal-based todo manager — learning project"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic>=2.0",
+    "pydantic-settings>=2.14.1",
+    "rich>=15.0.0",
+    "typer>=0.26.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.3",
+]
+
+[project.scripts]
+todo = "todo_app.main:main"   # 安装后用 `todo` 命令启动
