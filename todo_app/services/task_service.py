@@ -1,10 +1,13 @@
 # 7 个方法：增删改查完成取消
+from datetime import datetime, timezone
+
 from todo_app.repositories.base import TaskRepository
 from todo_app.dto.task_create import CreateTaskDTO
 from todo_app.dto.task_update import UpdateTaskDTO
 from todo_app.dto.task_response import TaskResponseDTO
 from todo_app.exceptions import TaskNotFoundError
 from todo_app.models.task import Task, TaskStatus
+
 class TaskService:
     """
     业务逻辑层。
@@ -16,6 +19,11 @@ class TaskService:
     """
     def __init__(self, repo: TaskRepository):
         self.repo = repo
+    def _get_task_or_raise(self, task_id: str) -> Task:
+        task = self.repo.get_by_id(task_id)
+        if not task:
+            raise TaskNotFoundError(task_id)
+        return task
 
     def add_task(self, dto: CreateTaskDTO) -> TaskResponseDTO:
         task = Task(
@@ -33,37 +41,30 @@ class TaskService:
         return [TaskResponseDTO.from_task(t) for t in tasks]
 
     def get_task_detail(self, task_id: str) -> TaskResponseDTO:
-        task = self.repo.get_by_id(task_id)
-        if task is None:
-            raise TaskNotFoundError(f"找不到ID：{task_id}的任务")
+        task = self._get_task_or_raise(task_id)
         return TaskResponseDTO.from_task(task)
     
     def complete_task(self, task_id: str) -> TaskResponseDTO:
-        task = self.repo.get_by_id(task_id)
-        if task is None:
-            raise TaskNotFoundError(f"找不到ID：{task_id}的任务")
+        task = self._get_task_or_raise(task_id)
         task.mark_completed()
+        self.repo.update(task)
         return TaskResponseDTO.from_task(task)
 
     def uncomplete_task(self, task_id: str) -> TaskResponseDTO:
-        task = self.repo.get_by_id(task_id)
-        if task is None:
-            raise TaskNotFoundError(f"找不到ID：{task_id}的任务")
+        task = self._get_task_or_raise(task_id)
         task.mark_pending()
+        self.repo.update(task)
         return TaskResponseDTO.from_task(task)
 
     def delete_task(self, task_id: str) -> bool:
-        deleted = self.repo.delete(task_id)
-        if not deleted:
-            raise TaskNotFoundError(f"找不到ID：{task_id}的任务")
-        return True
+        return self.repo.delete(task_id)
 
     def update_task(self, dto: UpdateTaskDTO) -> TaskResponseDTO:
-        task = self.repo.get_by_id(dto.task_id)
-        if task is None:
-            raise TaskNotFoundError(f"找不到ID：{dto.task_id}的任务")
+        task = self._get_task_or_raise(dto.task_id)
         updates = dto.model_dump(exclude_none=True)
         for field, value in updates.items():
             if field != 'task_id':
                 setattr(task, field, value)
+        task.updated_at = datetime.now(timezone.utc).isoformat()
+        self.repo.update(task)
         return TaskResponseDTO.from_task(task)

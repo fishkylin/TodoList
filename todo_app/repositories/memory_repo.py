@@ -30,7 +30,7 @@ class MemoryTaskRepository(TaskRepository):
             if t.id == task.id:
                 self._tasks[i] = task
                 return task
-        raise TaskNotFoundError(f"未找到 id = {task.id} 的任务，无法更新")
+        raise TaskNotFoundError(task.id)
 
     def delete(self, task_id: str) -> bool:
         old_len = self.count()
