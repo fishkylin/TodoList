@@ -4,7 +4,7 @@ from todo_app.dto.task_create import CreateTaskDTO
 from todo_app.dto.task_update import UpdateTaskDTO
 from todo_app.dto.task_response import TaskResponseDTO
 from todo_app.exceptions import TaskNotFoundError
-from todo_app.models.task import Task
+from todo_app.models.task import Task, TaskStatus
 class TaskService:
     """
     业务逻辑层。
@@ -26,5 +26,44 @@ class TaskService:
         saved_task = self.repo.add(task)
         return TaskResponseDTO.from_task(saved_task)
 
-    def list_tasks(self, *, include_completed=True) -> list[TaskResponseDTO]:
-        pass
+    def list_tasks(self, *, include_completed: bool = True) -> list[TaskResponseDTO]:
+        tasks = self.repo.get_all()
+        if not include_completed:
+            tasks = [t for t in tasks if t.status != TaskStatus.COMPLETED]
+        return [TaskResponseDTO.from_task(t) for t in tasks]
+
+    def get_task_detail(self, task_id: str) -> TaskResponseDTO:
+        task = self.repo.get_by_id(task_id)
+        if task is None:
+            raise TaskNotFoundError(f"找不到ID：{task_id}的任务")
+        return TaskResponseDTO.from_task(task)
+    
+    def complete_task(self, task_id: str) -> TaskResponseDTO:
+        task = self.repo.get_by_id(task_id)
+        if task is None:
+            raise TaskNotFoundError(f"找不到ID：{task_id}的任务")
+        task.mark_completed()
+        return TaskResponseDTO.from_task(task)
+
+    def uncomplete_task(self, task_id: str) -> TaskResponseDTO:
+        task = self.repo.get_by_id(task_id)
+        if task is None:
+            raise TaskNotFoundError(f"找不到ID：{task_id}的任务")
+        task.mark_pending()
+        return TaskResponseDTO.from_task(task)
+
+    def delete_task(self, task_id: str) -> bool:
+        deleted = self.repo.delete(task_id)
+        if not deleted:
+            raise TaskNotFoundError(f"找不到ID：{task_id}的任务")
+        return True
+
+    def update_task(self, dto: UpdateTaskDTO) -> TaskResponseDTO:
+        task = self.repo.get_by_id(dto.task_id)
+        if task is None:
+            raise TaskNotFoundError(f"找不到ID：{dto.task_id}的任务")
+        updates = dto.model_dump(exclude_none=True)
+        for field, value in updates.items():
+            if field != 'task_id':
+                setattr(task, field, value)
+        return TaskResponseDTO.from_task(task)
