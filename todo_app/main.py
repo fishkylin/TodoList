@@ -5,9 +5,8 @@ from typing import Annotated
 
 from todo_app.config import Settings
 from todo_app.language import get_texts
-from todo_app.repositories.memory_repo import MemoryTaskRepository
+from todo_app.repositories.json_repo import JsonTaskRepository
 from todo_app.services.task_service import TaskService
-
 from todo_app.commands.add import add as add_cmd
 from todo_app.commands.list import list_tasks as list_cmd
 
@@ -37,7 +36,7 @@ def main_callback(
     effective_lang = lang if lang != "en" else settings.language
 
     ctx.ensure_object(dict)
-    ctx.obj["service"] = TaskService(MemoryTaskRepository())
+    ctx.obj["service"] = TaskService(JsonTaskRepository(settings.data_file))
     ctx.obj["texts"] = get_texts(effective_lang)
 
 
