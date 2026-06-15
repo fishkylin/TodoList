@@ -17,7 +17,7 @@ dev = [
 ]
 
 [project.scripts]
-todo = "todo_app.main:main"   # 安装后用 `todo` 命令启动
+todo = "todo_app.main:app"   # 安装后用 `todo` 命令启动
 
 [tool.uv]
 package = true
