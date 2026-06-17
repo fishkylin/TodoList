@@ -3,7 +3,9 @@ import typer
 from typing import Annotated
 from todo_app.exceptions import StorageError
 from todo_app.dest import get_service
-
+from rich.console import Console
+from rich.table import Table
+from rich.text import Text
 def list_tasks(
     ctx: typer.Context,
     show_all: Annotated[bool, typer.Option("-a", "--all")] = False
@@ -22,6 +24,17 @@ def list_tasks(
         typer.echo(t["prompt"]["no_tasks"])
         return
 
+    console = Console()
+    table = Table(title="My Tasks", title_style="bold white")
+    table.add_column("ID", style="cyan", width=12, no_wrap=True)
+    table.add_column("Title", width=40, overflow="fold")
+    table.add_column("Status", width=8, justify="center")
     for task in tasks:
         icon = t["status"]["done"] if task.is_completed else t["status"]["pending"]
-        typer.echo(f"   {task.id}  {icon}  {task.title}")
+        color = "green bold" if task.is_completed else "red bold"
+        table.add_row(
+            task.id,
+            Text(task.title, style=color, overflow="fold"),
+            Text(icon, style=color)
+        )
+    console.print(table)

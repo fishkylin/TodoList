@@ -9,6 +9,7 @@ from todo_app.repositories.json_repo import JsonTaskRepository
 from todo_app.services.task_service import TaskService
 from todo_app.commands.add import add as add_cmd
 from todo_app.commands.list import list_tasks as list_cmd
+from todo_app.commands.show import show as show_cmd
 
 
 app = typer.Typer(
@@ -42,6 +43,6 @@ def main_callback(
 
 app.command(name="add")(add_cmd)
 app.command(name="list")(list_cmd)
-
+app.command(name="show")(show_cmd)
 if __name__ == "__main__":
     app()
