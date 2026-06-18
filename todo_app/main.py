@@ -10,7 +10,9 @@ from todo_app.services.task_service import TaskService
 from todo_app.commands.add import add as add_cmd
 from todo_app.commands.list import list_tasks as list_cmd
 from todo_app.commands.show import show as show_cmd
-
+from todo_app.commands.delete import delete_task as delete_cmd
+from todo_app.commands.done import done as done_cmd
+from todo_app.commands.edit import edit as edit_cmd
 
 app = typer.Typer(
     name="todo",
@@ -44,5 +46,9 @@ def main_callback(
 app.command(name="add")(add_cmd)
 app.command(name="list")(list_cmd)
 app.command(name="show")(show_cmd)
+app.command(name="show")(show_cmd)
+app.command(name="delete")(delete_cmd)
+app.command(name="done")(done_cmd)
+app.command(name="edit")(edit_cmd)
 if __name__ == "__main__":
     app()
