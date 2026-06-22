@@ -11,6 +11,7 @@ def show(
         ctx: typer.Context,
         task_id: Annotated[str, typer.Argument(help="Task ID")]
     ) -> None:
+    """Task 详情"""
     service = get_service(ctx)
     t = ctx.obj["texts"]
 

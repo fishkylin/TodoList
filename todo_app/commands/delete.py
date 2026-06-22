@@ -10,6 +10,7 @@ def delete_task(
     task_id: Annotated[str, typer.Argument(help="Task ID")],
     force: Annotated[bool, typer.Option("-f", "--force")] = False
 ) -> None:
+    """删除任务。"""
     service = get_service(ctx)
     t = ctx.obj["texts"]
 

@@ -12,6 +12,7 @@ def edit(
     description: Annotated[str | None, typer.Option("-d", "--description", help="Task Description")] = None,
     priority: Annotated[int | None, typer.Option("-p", "--priority", help="Task Priority")] = None
 ) -> None:
+    """部分更新。只改用户指定的字段。"""
     service = get_service(ctx)
     t = ctx.obj["texts"]
     if title is None and description is None and priority is None:

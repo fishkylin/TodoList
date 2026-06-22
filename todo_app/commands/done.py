@@ -8,6 +8,7 @@ def done(
     ctx: typer.Context,
     task_id: Annotated[str, typer.Argument(help="Task ID")]
 ) -> None:
+    """Toggle: 未完成 → 完成，已完成 → 重新打开。"""
     service = get_service(ctx)
     t = ctx.obj["texts"]
     try:

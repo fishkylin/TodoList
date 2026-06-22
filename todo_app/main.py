@@ -4,7 +4,7 @@ from typing import Annotated
 
 
 from todo_app.config import Settings
-from todo_app.language import get_texts
+from todo_app.i18n import get_texts
 from todo_app.repositories.json_repo import JsonTaskRepository
 from todo_app.services.task_service import TaskService
 from todo_app.commands.add import add as add_cmd
@@ -13,6 +13,7 @@ from todo_app.commands.show import show as show_cmd
 from todo_app.commands.delete import delete_task as delete_cmd
 from todo_app.commands.done import done as done_cmd
 from todo_app.commands.edit import edit as edit_cmd
+from todo_app.logger import get_logger, setup_logging
 
 app = typer.Typer(
     name="todo",
@@ -35,8 +36,12 @@ def main_callback(
     3. 创建服务
     4. 注入 Typer 上下文 → 命令函数通过 ctx.obj 获取
     """
+        
     settings = Settings()
     effective_lang = lang if lang != "en" else settings.language
+    logger = get_logger(__name__)
+    setup_logging("DEBUG" if debug else settings.log_level)
+    logger.info("Todo CLI starting (lang=%s, debug=%s)", effective_lang, debug)
 
     ctx.ensure_object(dict)
     ctx.obj["service"] = TaskService(JsonTaskRepository(settings.data_file))
@@ -50,5 +55,6 @@ app.command(name="show")(show_cmd)
 app.command(name="delete")(delete_cmd)
 app.command(name="done")(done_cmd)
 app.command(name="edit")(edit_cmd)
+
 if __name__ == "__main__":
     app()
