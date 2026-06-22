@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 def delete_task(
     ctx: typer.Context,
-    task_id: Annotated[str, typer.Argument(help="Task ID")],
+    task_id: Annotated[str, typer.Argument(help='Task ID (or numeric shorthand, e.g. "1")')],
     force: Annotated[bool, typer.Option("-f", "--force")] = False,
 ) -> None:
     """Delete a task.  Prompts for confirmation unless ``--force`` is used."""

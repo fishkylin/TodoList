@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 def edit(
     ctx: typer.Context,
-    task_id: Annotated[str, typer.Argument(help="Task ID")],
+    task_id: Annotated[str, typer.Argument(help='Task ID (or numeric shorthand, e.g. "1")')],
     title: Annotated[str | None, typer.Option("-t", "--title", help="New title")] = None,
     description: Annotated[str | None, typer.Option("-d", "--description", help="New description")] = None,
     priority: Annotated[int | None, typer.Option("-p", "--priority", help="New priority (0-3)")] = None,

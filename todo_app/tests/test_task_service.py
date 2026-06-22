@@ -230,3 +230,49 @@ class TestServiceIntegration:
         # Final state
         all_tasks = task_service.list_tasks()
         assert len(all_tasks) == 2
+
+
+class TestServiceNumericShorthand:
+    """All task_id-accepting service methods must handle numeric shorthand.
+
+    Each test adds a task (which gets ``TASK-0001``), then accesses it
+    via the shorthand ``"1"``.
+    """
+
+    def test_get_task_detail(self, task_service: TaskService) -> None:
+        added = task_service.add_task(CreateTaskDTO(title="Detail"))
+        detail = task_service.get_task_detail("1")
+        assert detail.id == added.id
+
+    def test_complete_task(self, task_service: TaskService) -> None:
+        task_service.add_task(CreateTaskDTO(title="To Complete"))
+        result = task_service.complete_task("1")
+        assert result.is_completed is True
+
+    def test_uncomplete_task(self, task_service: TaskService) -> None:
+        task_service.add_task(CreateTaskDTO(title="Toggle"))
+        task_service.complete_task("1")
+        result = task_service.uncomplete_task("1")
+        assert result.is_completed is False
+
+    def test_update_task(self, task_service: TaskService) -> None:
+        task_service.add_task(CreateTaskDTO(title="Old"))
+        dto = UpdateTaskDTO(task_id="1", title="New Title")
+        result = task_service.update_task(dto)
+        assert result.title == "New Title"
+
+    def test_delete_task(self, task_service: TaskService) -> None:
+        task_service.add_task(CreateTaskDTO(title="Delete Me"))
+        assert task_service.delete_task("1") is True
+
+    def test_nonexistent_shorthand_raises(self, task_service: TaskService) -> None:
+        """Shorthand for a non-existent index raises ``TaskNotFoundError``."""
+        with pytest.raises(TaskNotFoundError) as exc_info:
+            task_service.get_task_detail("9999")
+        assert "TASK-9999" in str(exc_info.value)
+
+    def test_full_format_still_works(self, task_service: TaskService) -> None:
+        """Existing callers using full ``TASK-XXXX`` format are not broken."""
+        added = task_service.add_task(CreateTaskDTO(title="Full Format"))
+        detail = task_service.get_task_detail(added.id)
+        assert detail.id == added.id

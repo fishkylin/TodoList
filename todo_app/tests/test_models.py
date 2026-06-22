@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from todo_app.models.task import Task, TaskStatus, generate_task_id
+from todo_app.models.task import Task, TaskStatus, generate_task_id, normalize_task_id
 
 
 class TestTaskStatus:
@@ -132,3 +132,33 @@ class TestGenerateTaskId:
     def test_overflow_padding(self) -> None:
         """Index beyond 4 digits just uses more digits."""
         assert generate_task_id(10000) == "TASK-10000"
+
+
+class TestNormalizeTaskId:
+    """Tests for normalize_task_id()."""
+
+    def test_numeric_shorthand(self) -> None:
+        assert normalize_task_id("1") == "TASK-0001"
+
+    def test_larger_number(self) -> None:
+        assert normalize_task_id("42") == "TASK-0042"
+
+    def test_overflow_number(self) -> None:
+        """Numbers beyond 4 digits just use more digits."""
+        assert normalize_task_id("10000") == "TASK-10000"
+
+    def test_zero_padded_input(self) -> None:
+        """``"0001"`` is numeric and produces the same result as ``"1"``."""
+        assert normalize_task_id("0001") == "TASK-0001"
+
+    def test_full_format_passthrough(self) -> None:
+        """Canonical ``TASK-XXXX`` IDs pass through unchanged."""
+        assert normalize_task_id("TASK-0042") == "TASK-0042"
+
+    def test_custom_id_passthrough(self) -> None:
+        """Non-numeric IDs like ``CUSTOM-001`` pass through."""
+        assert normalize_task_id("CUSTOM-001") == "CUSTOM-001"
+
+    def test_empty_string_passthrough(self) -> None:
+        """Empty string is not numeric and passes through unchanged."""
+        assert normalize_task_id("") == ""

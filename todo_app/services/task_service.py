@@ -6,7 +6,7 @@ from todo_app.dto.task_response import TaskResponseDTO
 from todo_app.dto.task_update import UpdateTaskDTO
 from todo_app.exceptions import TaskNotFoundError
 from todo_app.logger import get_logger
-from todo_app.models.task import Task, TaskStatus
+from todo_app.models.task import Task, TaskStatus, normalize_task_id
 from todo_app.repositories.base import TaskRepository
 
 logger = get_logger(__name__)
@@ -27,6 +27,7 @@ class TaskService:
         self.repo = repo
 
     def _get_task_or_raise(self, task_id: str) -> Task:
+        task_id = normalize_task_id(task_id)
         task = self.repo.get_by_id(task_id)
         if not task:
             raise TaskNotFoundError(task_id)
@@ -70,6 +71,7 @@ class TaskService:
         return TaskResponseDTO.from_task(task)
 
     def delete_task(self, task_id: str) -> bool:
+        task_id = normalize_task_id(task_id)
         result = self.repo.delete(task_id)
         logger.info("Task %s deleted (existed=%s)", task_id, result)
         return result

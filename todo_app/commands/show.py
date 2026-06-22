@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 def show(
     ctx: typer.Context,
-    task_id: Annotated[str, typer.Argument(help="Task ID")],
+    task_id: Annotated[str, typer.Argument(help='Task ID (or numeric shorthand, e.g. "1")')],
 ) -> None:
     """Display full details for a single task."""
     service = get_service(ctx)

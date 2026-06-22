@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 def done(
     ctx: typer.Context,
-    task_id: Annotated[str, typer.Argument(help="Task ID")],
+    task_id: Annotated[str, typer.Argument(help='Task ID (or numeric shorthand, e.g. "1")')],
 ) -> None:
     """Toggle task status: pending → completed, or completed → pending."""
     service = get_service(ctx)
