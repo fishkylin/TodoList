@@ -1,18 +1,20 @@
-# 任务输出：给命令层渲染用
+"""Task output DTO — consumed by the command layer for rendering."""
 from pydantic import BaseModel
+
 from todo_app.models.task import Task, TaskStatus
 
-class TaskResponseDTO(BaseModel):
-    """
-    任务输出——给命令层渲染用。
 
-    is_completed 是便捷字段：从 status 推导而来。
-    命令层不需要自己判断 TaskStatus 枚举。
+class TaskResponseDTO(BaseModel):
+    """Output model for a task, ready for presentation.
+
+    ``is_completed`` is a convenience field derived from ``status`` so the
+    command layer never needs to compare ``TaskStatus`` enum values directly.
     """
+
     id: str
     title: str
     description: str | None
-    status: str              # TaskStatus.value → "pending" / "completed"
+    status: str  # "pending" | "completed"
     priority: int
     created_at: str
     completed_at: str | None
@@ -20,7 +22,7 @@ class TaskResponseDTO(BaseModel):
 
     @classmethod
     def from_task(cls, task: Task) -> "TaskResponseDTO":
-        """从领域模型构建输出 DTO。"""
+        """Build a response DTO from a domain ``Task``."""
         return cls(
             id=task.id,
             title=task.title,
@@ -29,5 +31,5 @@ class TaskResponseDTO(BaseModel):
             priority=task.priority,
             created_at=task.created_at,
             completed_at=task.completed_at,
-            is_completed=(task.status == TaskStatus.COMPLETED)
+            is_completed=(task.status == TaskStatus.COMPLETED),
         )

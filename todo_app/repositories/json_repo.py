@@ -1,68 +1,70 @@
-# JSON 文件实现（读写 ~/.todo/tasks.json）
-import json, tempfile, shutil
+"""JSON-file task repository with atomic writes."""
+import json
+import shutil
+import tempfile
 from pathlib import Path
 from typing import Any
 
-from todo_app.repositories.base import TaskRepository
-from todo_app.models.task import Task, generate_task_id
 from todo_app.exceptions import StorageError, TaskNotFoundError
-# from todo_app.logger import get_logger
+from todo_app.logger import get_logger
+from todo_app.models.task import Task, generate_task_id
+from todo_app.repositories.base import TaskRepository
 
-# logger = get_logger(__name__)
+logger = get_logger(__name__)
+
 
 class JsonTaskRepository(TaskRepository):
-    """
-    JSON 文件持久化。
+    """Persist tasks to a single JSON file on disk.
 
-    内部文件结构:
+    Internal file structure::
+
         {"tasks": [{task_dict}, ...], "meta": {"next_index": 5}}
 
-    为什么 _load_data / _save_data 是私有方法：
-    - 外部只需要 get_all/add/delete 等，不需要知道 JSON 长什么样
-    - 未来改成 SQLite 时，这些私有方法会被完全替换，公开方法签名不变
+    Writes are atomic (temp file → rename → cleanup) to avoid
+    corrupting the data file on partial failures.
     """
 
     def __init__(self, file_path: Path):
         self.file_path = file_path
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
+        logger.debug("JsonTaskRepository initialised (file=%s)", file_path)
 
-    # ── 私有方法 ──
+    # ── private helpers ─────────────────────────────────────────────
 
     def _load_data(self) -> dict[str, Any]:
-        """读 JSON 文件，处理损坏和结构异常。
+        """Load task data from the JSON file.
 
-        当数据损坏时自动写入一份干净的默认数据，避免只读方法（get_all/count）
-        每次调用都因为未修复的损坏文件而重复降级。
+        Returns a clean default on first run; auto-repairs on corruption.
         """
         default: dict[str, Any] = {"tasks": [], "meta": {"next_index": 1}}
-        data: Any = None
         corrupted = False
 
         try:
             with open(self.file_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+                data: Any = json.load(f)
         except FileNotFoundError:
+            logger.debug("No existing data file — starting fresh")
             return default
         except (UnicodeDecodeError, json.JSONDecodeError):
-            # logger.warning("Data file corrupted, resetting to empty")
+            logger.warning("Data file corrupted, resetting to empty")
             corrupted = True
         except OSError as e:
-            # logger.exception("Failed to read task data")
+            logger.exception("Failed to read task data")
             raise StorageError("Could not read task data.") from e
 
         if corrupted:
             self._save_data(default)
             return default
 
-        # 合法 JSON 不一定是 dict（可能是 "hello"、[1,2,3]），防御一下
         if not isinstance(data, dict):
+            logger.warning("Unexpected JSON root type (%s), resetting", type(data).__name__)
             self._save_data(default)
             return default
 
         return data
 
     def _save_data(self, data: dict[str, Any]) -> None:
-        """原子写入：临时文件 → 重命名 → 清理。"""
+        """Atomically write data to disk."""
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
         tmp_path: Path | None = None
         try:
@@ -76,27 +78,34 @@ class JsonTaskRepository(TaskRepository):
             ) as tmp_file:
                 tmp_path = Path(tmp_file.name)
                 json.dump(data, tmp_file, indent=2, ensure_ascii=False)
-            # with 块结束 → 文件已关闭，但 delete=False 保留了文件
+
             shutil.move(str(tmp_path), str(self.file_path))
+            logger.debug("Data saved (%d tasks)", len(data.get("tasks", [])))
         except OSError as e:
-            # logger.exception("Failed to save task data")
+            logger.exception("Failed to save task data")
             raise StorageError("Could not save task data.") from e
         finally:
             if tmp_path is not None and tmp_path.exists():
                 tmp_path.unlink()
-    # ── 公开方法 ──
+
+    # ── public interface ────────────────────────────────────────────
 
     def get_all(self) -> list[Task]:
+        logger.debug("Loading all tasks")
         data = self._load_data()
         tasks = [Task.model_validate(t) for t in data["tasks"]]
         tasks.sort(key=lambda t: t.created_at, reverse=True)
+        logger.debug("Loaded %d task(s)", len(tasks))
         return tasks
 
     def get_by_id(self, task_id: str) -> Task | None:
+        logger.debug("Looking up task %s", task_id)
         data = self._load_data()
         for t in data["tasks"]:
             if t.get("id") == task_id:
+                logger.debug("Task %s found", task_id)
                 return Task.model_validate(t)
+        logger.debug("Task %s not found", task_id)
         return None
 
     def add(self, task: Task) -> Task:
@@ -106,6 +115,7 @@ class JsonTaskRepository(TaskRepository):
             data["meta"]["next_index"] += 1
         data["tasks"].append(task.model_dump())
         self._save_data(data)
+        logger.info("Task %s added — %d total", task.id, len(data["tasks"]))
         return task
 
     def update(self, task: Task) -> Task:
@@ -115,17 +125,24 @@ class JsonTaskRepository(TaskRepository):
             if t_dict.get("id") == task.id:
                 tasks[idx] = task.model_dump()
                 self._save_data(data)
+                logger.info("Task %s updated", task.id)
                 return task
+        logger.warning("Task %s not found for update", task.id)
         raise TaskNotFoundError(task.id)
 
     def delete(self, task_id: str) -> bool:
         data = self._load_data()
-        tasks = data.get("tasks", [])
-        old_len = len(tasks)
-        new_tasks = [t for t in tasks if t.get("id") != task_id]
+        old_len = len(data.get("tasks", []))
+        new_tasks = [t for t in data["tasks"] if t.get("id") != task_id]
         data["tasks"] = new_tasks
         self._save_data(data)
-        return old_len != len(tasks)
-        
+
+        deleted = old_len > len(new_tasks)
+        if deleted:
+            logger.info("Task %s deleted — %d remaining", task_id, len(new_tasks))
+        else:
+            logger.debug("Task %s not found for deletion", task_id)
+        return deleted
+
     def count(self) -> int:
         return len(self._load_data()["tasks"])

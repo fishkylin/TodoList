@@ -1,1 +1,1 @@
-# 空文件，标识这是一个 Python 包
+"""todo_app — A terminal-based Todo CLI application."""

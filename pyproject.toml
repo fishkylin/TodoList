@@ -17,7 +17,15 @@ dev = [
 ]
 
 [project.scripts]
-todo = "todo_app.main:app"   # 安装后用 `todo` 命令启动
+todo = "todo_app.main:app" 
 
 [tool.uv]
 package = true
+
+[tool.setuptools]
+packages = ["todo_app"] 
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]

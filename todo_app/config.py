@@ -1,65 +1,58 @@
-# 设置类：从 .env 读配置（数据目录、语言、日志级别）
+"""Application settings loaded from environment variables and .env file."""
 from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-class Settings(BaseSettings):
-    """应用配置类，从环境变量或 .env 文件加载配置项。
 
-    配置项以 `TODO_` 为前缀，支持通过 `.env` 文件或系统环境变量覆盖默认值。
-    实例创建后不可变（frozen=True），确保配置在整个应用中保持一致。
+class Settings(BaseSettings):
+    """Application configuration loaded from env vars / .env file.
+
+    All fields are prefixed with ``TODO_`` and support overrides via
+    environment variables or a ``.env`` file.  The instance is frozen
+    after creation so configuration stays consistent across the app.
 
     Attributes:
-        data_dir (Path): 数据存储目录的路径。默认值为用户家目录下的 `.todo` 文件夹。
-            可通过环境变量 `TODO_DATA_DIR` 覆盖。
-        language (str): 应用界面语言。默认为 `"en"`（英语）。可通过 `TODO_LANGUAGE` 覆盖。
-        log_level (str): 日志记录级别。默认为 `"INFO"`。可通过 `TODO_LOG_LEVEL` 覆盖。
+        data_dir: Data storage directory.  Defaults to ``~/.todo``.
+            Override with ``TODO_DATA_DIR``.
+        language: UI language.  Defaults to ``"en"``.
+            Override with ``TODO_LANGUAGE``.
+        log_level: Logging level.  Defaults to ``"INFO"``.
+            Override with ``TODO_LOG_LEVEL``.
 
     Properties:
-        data_file (Path): 只读属性，返回任务存储文件的完整路径，即 `data_dir / "tasks.json"`。
+        data_file: Full path to the task JSON file (``data_dir / "tasks.json"``).
 
-    Configuration Sources (优先级从高到低):
-        1. 系统环境变量（如 `TODO_DATA_DIR=/custom/data`）
-        2. `.env` 文件中的变量（需与类字段名匹配，可加前缀）
-        3. 代码中定义的默认值
+    Configuration precedence (highest to lowest):
+        1. Environment variables (e.g. ``TODO_DATA_DIR=/custom/path``)
+        2. ``.env`` file entries
+        3. Class defaults
 
     Examples:
-        方式一：直接使用默认配置
-        >>> settings = Settings()
-        >>> settings.data_dir
-        PosixPath('/home/user/.todo')
-        >>> settings.data_file
-        PosixPath('/home/user/.todo/tasks.json')
+        Defaults::
 
-        方式二：通过 `.env` 文件覆盖配置（文件内容示例）
-        ```
-        TODO_DATA_DIR=/tmp/myapp_data
-        TODO_LANGUAGE=zh
-        TODO_LOG_LEVEL=DEBUG
-        ```
+            >>> s = Settings()
+            >>> s.data_file
+            PosixPath('/home/user/.todo/tasks.json')
 
-        方式三：通过系统环境变量（优先级高于 `.env`）
-        ```bash
-        export TODO_DATA_DIR=/custom/path
-        python your_app.py
-        ```
+        Custom via ``.env``::
 
-    Note:
-        - 如果 `.env` 文件中存在未在 `Settings` 类中定义的变量，将被忽略（`extra="ignore"`）。
-        - 由于 `frozen=True`，配置实例的字段不可修改，任何赋值尝试都会引发 `TypeError`。
+            TODO_DATA_DIR=/tmp/myapp_data
+            TODO_LANGUAGE=zh
+            TODO_LOG_LEVEL=DEBUG
     """
+
     model_config = SettingsConfigDict(
         env_prefix="TODO_",
         env_file=".env",
         extra="ignore",
-        frozen=True
+        frozen=True,
     )
+
     data_dir: Path = Path.home() / ".todo"
     language: str = "en"
     log_level: str = "INFO"
 
     @property
     def data_file(self) -> Path:
-        """数据文件完整路径。@property 不受 frozen=True 限制。"""
+        """Full path to ``tasks.json``.  Not affected by ``frozen=True``."""
         return self.data_dir / "tasks.json"
-
-    
