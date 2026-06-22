@@ -57,20 +57,3 @@ def generate_task_id(index: int) -> str:
     """Generate a zero-padded task ID, e.g. ``TASK-0042``."""
     return f"TASK-{index:04d}"
 
-
-def normalize_task_id(raw: str) -> str:
-    """Normalize a user-provided task ID to canonical ``TASK-XXXX`` form.
-
-    Accepts a bare decimal integer (e.g. ``"1"``, ``"42"``) and converts
-    it to the canonical zero-padded format.  Full ``TASK-XXXX`` IDs and
-    any other non-numeric strings pass through unchanged::
-
-        normalize_task_id("1")     → "TASK-0001"
-        normalize_task_id("42")    → "TASK-0042"
-        normalize_task_id("TASK-0001") → "TASK-0001"
-        normalize_task_id("CUSTOM-001") → "CUSTOM-001"
-        normalize_task_id("")      → ""
-    """
-    if raw.isdigit():
-        return f"TASK-{int(raw):04d}"
-    return raw

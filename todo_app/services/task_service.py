@@ -6,7 +6,8 @@ from todo_app.dto.task_response import TaskResponseDTO
 from todo_app.dto.task_update import UpdateTaskDTO
 from todo_app.exceptions import TaskNotFoundError
 from todo_app.logger import get_logger
-from todo_app.models.task import Task, TaskStatus, normalize_task_id
+from todo_app.models.task import Task, TaskStatus
+from todo_app.utils import normalize_task_id
 from todo_app.repositories.base import TaskRepository
 
 logger = get_logger(__name__)

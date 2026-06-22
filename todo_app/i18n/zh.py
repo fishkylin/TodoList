@@ -33,6 +33,7 @@ TEXTS = {
         "label_status": "状态",
         "label_priority": "优先级",
         "label_created": "创建时间",
+        "label_updated": "更新时间",
         "label_completed": "完成时间",
         "status_done": "已完成",
         "status_pending": "待完成",

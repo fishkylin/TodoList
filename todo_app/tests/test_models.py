@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from todo_app.models.task import Task, TaskStatus, generate_task_id, normalize_task_id
+from todo_app.models.task import Task, TaskStatus, generate_task_id
+from todo_app.utils import normalize_task_id
 
 
 class TestTaskStatus:

@@ -17,6 +17,7 @@ class TaskResponseDTO(BaseModel):
     status: str  # "pending" | "completed"
     priority: int
     created_at: str
+    updated_at: str
     completed_at: str | None
     is_completed: bool
 
@@ -30,6 +31,7 @@ class TaskResponseDTO(BaseModel):
             status=task.status,
             priority=task.priority,
             created_at=task.created_at,
+            updated_at=task.updated_at,
             completed_at=task.completed_at,
             is_completed=(task.status == TaskStatus.COMPLETED),
         )

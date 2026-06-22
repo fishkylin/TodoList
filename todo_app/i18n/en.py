@@ -33,6 +33,7 @@ TEXTS = {
         "label_status": "Status",
         "label_priority": "Priority",
         "label_created": "Created",
+        "label_updated": "Updated",
         "label_completed": "Completed",
         "status_done": "Done",
         "status_pending": "Pending",

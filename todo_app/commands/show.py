@@ -9,6 +9,7 @@ from rich.table import Table as InnerTable
 from todo_app.dest import get_service, get_texts
 from todo_app.exceptions import StorageError, TaskNotFoundError
 from todo_app.logger import get_logger
+from todo_app.utils import format_datetime
 
 logger = get_logger(__name__)
 
@@ -45,8 +46,18 @@ def show(
         t["show"]["status_done"] if task.is_completed else t["show"]["status_pending"],
     )
     inner.add_row(t["show"]["label_priority"], str(task.priority))
-    inner.add_row(t["show"]["label_created"], task.created_at)
-    inner.add_row(t["show"]["label_completed"], task.completed_at or t["show"]["not_yet"])
+    inner.add_row(
+        t["show"]["label_created"],
+        format_datetime(iso_str=task.created_at, default=t["show"]["na"]),
+    )
+    inner.add_row(
+        t["show"]["label_updated"],
+        format_datetime(iso_str=task.updated_at, default=t["show"]["na"]),
+    )
+    inner.add_row(
+        t["show"]["label_completed"],
+        format_datetime(iso_str=task.completed_at, default=t["show"]["not_yet"]),
+    )
 
     console = Console()
     console.print(Panel(inner, title=f"Task {task_id}", border_style="blue"))
