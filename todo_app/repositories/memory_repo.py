@@ -7,11 +7,13 @@ from todo_app.repositories.base import TaskRepository
 class MemoryTaskRepository(TaskRepository):
     """Pure in-memory storage.  Data is lost on process exit — by design.
 
-    Used during early development and for test suites.
+    Used during early development and for test suites.  Each instance
+    owns its own task list and ID counter (no shared class state).
     """
 
-    _tasks: list[Task] = []
-    _next_id: int = 1
+    def __init__(self) -> None:
+        self._tasks: list[Task] = []
+        self._next_id: int = 1
 
     def get_all(self) -> list[Task]:
         return sorted(self._tasks, key=lambda t: t.created_at, reverse=True)
@@ -22,7 +24,7 @@ class MemoryTaskRepository(TaskRepository):
     def add(self, task: Task) -> Task:
         if task.id == "":
             task.id = generate_task_id(self._next_id)
-            self.__class__._next_id += 1
+            self._next_id += 1
         self._tasks.append(task)
         return task
 
@@ -34,9 +36,9 @@ class MemoryTaskRepository(TaskRepository):
         raise TaskNotFoundError(task.id)
 
     def delete(self, task_id: str) -> bool:
-        old_len = self.count()
+        old_len = len(self._tasks)
         self._tasks[:] = [t for t in self._tasks if t.id != task_id]
-        return old_len != self.count()
+        return old_len > len(self._tasks)
 
     def count(self) -> int:
         return len(self._tasks)
